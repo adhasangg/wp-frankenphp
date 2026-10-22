@@ -43,7 +43,10 @@ if [ "$CURRENT_OWNER" != "www-data:www-data" ]; then
     chown -R www-data:www-data /var/www/html/wp-content 2>/dev/null || true
 fi
 
-# 5. Optional: Wait for database if WAIT_FOR_DB is enabled
+# 5. Database Environment Variables Diagnostics
+echo ">> [DB Check] DB_HOST: ${DB_HOST:-[NOT SET - fallback to mysql:3306]}, DB_NAME: ${DB_NAME:-[NOT SET]}, DB_USER: ${DB_USER:-[NOT SET]}"
+
+# 6. Optional: Wait for database if WAIT_FOR_DB is enabled
 if [ "${WAIT_FOR_DB:-false}" = "true" ] && [ -n "${DB_HOST:-${WORDPRESS_DB_HOST:-}}" ]; then
     TARGET_HOST="${DB_HOST:-${WORDPRESS_DB_HOST}}"
     HOST="${TARGET_HOST%%:*}"
