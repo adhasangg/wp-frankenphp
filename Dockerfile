@@ -1,7 +1,7 @@
-FROM dunglas/frankenphp:latest-php8.3-bookworm
+FROM dunglas/frankenphp:latest
 
 LABEL maintainer="Custom WordPress FrankenPHP"
-LABEL description="High-performance WordPress image powered by FrankenPHP with .env support and Coolify reverse proxy compatibility"
+LABEL description="High-performance WordPress image powered by FrankenPHP PHP 8.5.12 with .env support and Coolify reverse proxy compatibility"
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -32,16 +32,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     imagick \
     opcache \
     igbinary \
-    && curl -fsSL https://github.com/phpredis/phpredis/archive/refs/tags/6.1.0.tar.gz -o /tmp/redis.tar.gz \
-    && mkdir -p /tmp/redis \
-    && tar -xzf /tmp/redis.tar.gz -C /tmp/redis --strip-components=1 \
-    && cd /tmp/redis \
-    && phpize \
-    && ./configure --enable-redis-igbinary \
-    && make -j$(nproc) \
-    && make install \
-    && docker-php-ext-enable redis \
-    && rm -rf /tmp/redis* \
+    redis \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install WP-CLI for easy management & automation via terminal
