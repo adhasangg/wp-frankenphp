@@ -1,0 +1,5 @@
+# Ensure Linux line endings for shell scripts and Docker files
+* text=auto
+*.sh text eol=lf
+Dockerfile text eol=lf
+Caddyfile text eol=lf

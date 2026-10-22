@@ -1,0 +1,41 @@
+{
+    # Global options
+    # Disable internal Caddy HTTPS management since Coolify's reverse proxy handles SSL termination
+    auto_https off
+    frankenphp
+    order php_server before file_server
+}
+
+:{$PORT:80} {
+    root * /var/www/html
+    encode zstd gzip
+
+    # FrankenPHP server handling PHP scripts & WordPress permalinks rewrite
+    php_server
+
+    # Static assets cache control
+    @static {
+        file
+        path *.ico *.css *.js *.gif *.jpg *.jpeg *.png *.svg *.woff *.woff2 *.ttf *.eot *.webp *.avif
+    }
+    header @static Cache-Control "public, max-age=31536000, must-revalidate"
+
+    # Security: Prevent direct access to sensitive and hidden files
+    @forbidden {
+        path /.env*
+        path /.git*
+        path /wp-config.php
+        path *.sql
+        path *.bak
+        path *.log
+        path /wp-content/uploads/*.php
+    }
+    respond @forbidden 403
+
+    # Enable standard stdout logging for Coolify / Docker logs
+    log {
+        output stdout
+        format console
+        level INFO
+    }
+}

@@ -1,0 +1,49 @@
+# ==============================================================================
+# Standalone WordPress FrankenPHP (Terhubung ke MySQL & Redis Shared di Server)
+# ==============================================================================
+
+services:
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: custom-wordpress-frankenphp:latest
+    restart: unless-stopped
+    ports:
+      # Port 80 exposed for internal container network or local test
+      - "${PORT:-8899}:80"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Database connection to shared MySQL/MariaDB
+      - DB_HOST=${DB_HOST:-mysql:3306}
+      - DB_NAME=${DB_NAME:-wordpress}
+      - DB_USER=${DB_USER:-wordpress}
+      - DB_PASSWORD=${DB_PASSWORD:-wordpress_secret}
+      - DB_CHARSET=${DB_CHARSET:-utf8mb4}
+      - DB_COLLATE=${DB_COLLATE:-}
+      - TABLE_PREFIX=${TABLE_PREFIX:-wp_}
+
+      # Redis connection to shared Redis container
+      - WP_REDIS_HOST=${WP_REDIS_HOST:-}
+      - WP_REDIS_PORT=${WP_REDIS_PORT:-6379}
+      - WP_REDIS_PASSWORD=${WP_REDIS_PASSWORD:-}
+      - WP_REDIS_DATABASE=${WP_REDIS_DATABASE:-0}
+      - WP_REDIS_PREFIX=${WP_REDIS_PREFIX:-}
+
+      # Domain and debugging
+      - WP_HOME=${WP_HOME:-}
+      - WP_SITEURL=${WP_SITEURL:-}
+      - WP_DEBUG=${WP_DEBUG:-false}
+    volumes:
+      # Persistent WordPress files
+      - wp_data:/var/www/html
+      # Persistent Caddy state & config
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  wp_data:
+  caddy_data:
+  caddy_config:

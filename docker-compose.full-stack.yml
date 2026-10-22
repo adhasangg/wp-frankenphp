@@ -1,0 +1,76 @@
+# ==============================================================================
+# Full Stack Docker Compose (WordPress FrankenPHP + MariaDB + Redis)
+# Gunakan file ini jika Anda ingin menjalankan stack lengkap secara lokal:
+#   docker compose -f docker-compose.full-stack.yml up -d
+# ==============================================================================
+
+services:
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: custom-wordpress-frankenphp:latest
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8899}:80"
+    environment:
+      - PORT=80
+      - DB_NAME=${DB_NAME:-wordpress}
+      - DB_USER=${DB_USER:-wordpress}
+      - DB_PASSWORD=${DB_PASSWORD:-wordpress_secret}
+      - DB_HOST=mariadb:3306
+      - WP_REDIS_HOST=redis
+      - WP_REDIS_PORT=6379
+      - WP_DEBUG=${WP_DEBUG:-false}
+    volumes:
+      - wp_data:/var/www/html
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app_network
+
+  mariadb:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_secret}
+      MYSQL_DATABASE: ${DB_NAME:-wordpress}
+      MYSQL_USER: ${DB_USER:-wordpress}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-wordpress_secret}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_520_ci
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+volumes:
+  wp_data:
+  caddy_data:
+  caddy_config:
+  db_data:
+  redis_data:
+
+networks:
+  app_network:
+    driver: bridge
