@@ -20,6 +20,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tar \
     bash \
     unzip \
+    default-mysql-client \
     && install-php-extensions \
     bcmath \
     exif \
